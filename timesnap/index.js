@@ -38,11 +38,6 @@ const { overwriteRandom } = require('./lib/overwrite-random');
 const { promiseLoop, getBrowserFrames, getAreaIndex, getNumberToList } = require('./lib/utils');
 const initializePageUtils = require('./lib/page-utils');
 const initializeMediaTimeHandler = require('./lib/media-time-handler');
-const {
-  play,
-  pause
-} = require('../utils/rrweb.play')
-
 module.exports = function (config) {
   config = Object.assign({}, config || {});
   var url = config.url || 'index.html';
