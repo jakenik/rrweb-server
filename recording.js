@@ -53,6 +53,9 @@ module.exports = async function () {
     return Promise.reject(err)
   })
 }
+// module.exports = async function () {
+//   recordhandle(7100041998839808)
+// }
 /**
  *
  * 视频录制处理
@@ -83,7 +86,9 @@ const recordhandle = function (belongId) {
         async beforeCapture(page, promiseLoop) { // 截图之前执行播放器播放
           await page.evaluateHandle((videoStartTime) => replayer.play(videoStartTime || 200), config.videoStartTime)
           return promiseLoop()
-        }
+        },
+        insertTimes: [300, 500],
+        insertList: getInsertList(config)
       }).then(async (localFileSrc) => {
         await OssUpload({
           name: belongId + config.fileType, path: localFileSrc
@@ -152,4 +157,12 @@ const batchUpdateFailBelongIds = function (list) {
     rmList = [...ids, ...rmList]
   })
   updateFailBelongIds(rmList)
+}
+
+const getInsertList = function (config) {
+  let list = []
+  for (let i = 0; i <= config.insertImgNumber; i++) {
+    list.push(config.insertImgSrc)
+  }
+  return list
 }

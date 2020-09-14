@@ -35,10 +35,13 @@ const path = require('path');
 const defaultDuration = 5;
 const defaultFPS = 60;
 const { overwriteRandom } = require('./lib/overwrite-random');
-const { promiseLoop, getBrowserFrames } = require('./lib/utils');
+const { promiseLoop, getBrowserFrames, getAreaIndex, getNumberToList } = require('./lib/utils');
 const initializePageUtils = require('./lib/page-utils');
 const initializeMediaTimeHandler = require('./lib/media-time-handler');
-
+const {
+  play,
+  pause
+} = require('../utils/rrweb.play')
 
 module.exports = function (config) {
   config = Object.assign({}, config || {});
@@ -81,7 +84,7 @@ module.exports = function (config) {
 
   if (!frameNumToTime) {
     frameNumToTime = function (frameCount) {
-      return (frameCount-1) * frameDuration;
+      return (frameCount - 1) * frameDuration;
     };
   }
 
@@ -105,17 +108,17 @@ module.exports = function (config) {
   };
 
   const getBrowser = function (config, launchOptions) {
-      if (config.browser) {
-        return Promise.resolve(config.browser);
-      } else if (config.launcher) {
-        return Promise.resolve(config.launcher(launchOptions));
-      } else if (config.remoteUrl) {
-        let queryString = Object.keys(launchOptions).map(key => key + '=' + launchOptions[key]).join('&');
-        let remote = config.remoteUrl + '?' + queryString;
-        return puppeteer.connect({ browserWSEndpoint: remote });
-      } else {
-        return puppeteer.launch(launchOptions);
-      }
+    if (config.browser) {
+      return Promise.resolve(config.browser);
+    } else if (config.launcher) {
+      return Promise.resolve(config.launcher(launchOptions));
+    } else if (config.remoteUrl) {
+      let queryString = Object.keys(launchOptions).map(key => key + '=' + launchOptions[key]).join('&');
+      let remote = config.remoteUrl + '?' + queryString;
+      return puppeteer.connect({ browserWSEndpoint: remote });
+    } else {
+      return puppeteer.launch(launchOptions);
+    }
   };
 
   return getBrowser(config, launchOptions).then(function (browser) {
@@ -123,7 +126,7 @@ module.exports = function (config) {
       // A marker is an action at a specific time
       var markers = [];
       var markerId = 0;
-      var addMarker = function ({time, type, data}) {
+      var addMarker = function ({ time, type, data }) {
         markers.push({ time, type, data, id: markerId++ });
       };
       config = Object.assign({
@@ -198,11 +201,22 @@ module.exports = function (config) {
             }
           });
         }
+        let addNumber = 0
         for (let i = 1; i <= framesToCapture; i++) {
+          let time = delayMs + frameNumToTime(i, framesToCapture)
+          let index = getAreaIndex(config.insertTimes, time)
+          if (index > -1) {
+            var s = i + addNumber
+            addNumber = ((index + 1) * config.insertImgNumber)
+            var d = i + addNumber
+            for (let c = s; c <= d; c++) {
+              capturer.copy(config, c, framesToCapture)
+            }
+          }
           addMarker({
-            time: delayMs + frameNumToTime(i, framesToCapture),
+            time: time,
             type: 'Capture',
-            data: { frameCount: i }
+            data: { frameCount: i + addNumber }
           });
           captureTimes.push(delayMs + frameNumToTime(i, framesToCapture));
         }
@@ -243,11 +257,11 @@ module.exports = function (config) {
 
         var startCaptureTime = new Date().getTime();
         var markerIndex = 0;
-        var promiseLoopFn = function() {
+        var promiseLoopFn = function () {
           return promiseLoop(function () {
             return !!config.stopController
-                ? !(config.stopController(page) || markerIndex >= markers.length)
-                : markerIndex < markers.length;
+              ? !(config.stopController(page) || markerIndex >= markers.length)
+              : markerIndex < markers.length;
           }, function () {
             var marker = markers[markerIndex];
             var p;
@@ -284,8 +298,8 @@ module.exports = function (config) {
           });
         }
         return config.beforeCapture
-        ? config.beforeCapture(page, promiseLoopFn)
-        : promiseLoopFn()
+          ? config.beforeCapture(page, promiseLoopFn)
+          : promiseLoopFn()
       });
     }).then(function () {
       return browser.close();

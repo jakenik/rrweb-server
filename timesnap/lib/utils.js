@@ -119,11 +119,25 @@ const makeFileDirectoryIfNeeded = function (filepath) {
   }
 };
 
+const getAreaIndex = function(list, number) {
+  return list.indexOf(number)
+}
+
+const getNumberToList = function(number, value) {
+  let list = []
+  for(let i = 0; i < number; i ++) {
+    list.push(value || null)
+  }
+  return list
+}
+
 module.exports = {
   promiseLoop,
   getBrowserFrames,
   getSelectorDimensions,
   writeFile,
   makeFilePathConverter,
-  makeFileDirectoryIfNeeded
+  makeFileDirectoryIfNeeded,
+  getAreaIndex,
+  getNumberToList
 };

@@ -31,7 +31,7 @@
  */
 
 const { getSelectorDimensions, makeFilePathConverter, makeFileDirectoryIfNeeded } = require('./utils.js');
-
+const fs = require('fs')
 module.exports = function (config) {
   var page = config.page;
   var log = config.log;
@@ -108,6 +108,18 @@ module.exports = function (config) {
         });
       }
       return p;
+    },
+    copy: function (config, frameCount, framesToCapture) {
+      return new Promise((resolve, reject) => {
+        var filePath = filePathConverter(frameCount, framesToCapture);
+        if (filePath) {
+          makeFileDirectoryIfNeeded(filePath);
+        }
+        log('Capturing Copy ' + frameCount + (filePath ? ' to ' + filePath : '') + '...');
+        fs.copyFile(config.insertImgSrc, filePath, (err) => {
+          err ? reject(err) : resolve()
+        })
+      })
     }
   };
 };
