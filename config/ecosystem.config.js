@@ -4,7 +4,7 @@ module.exports = {
       // 生产环境
       name: "prod",
       // 项目启动入口文件
-      script: "./app.js",
+      script: "../app.js",
       // 项目环境变量
       env: {
         "NODE_ENV": "prod"
@@ -13,7 +13,7 @@ module.exports = {
       // 测试环境
       name: "test",
       // 项目启动入口文件
-      script: "./app.js",
+      script: "../app.js",
       // 项目环境变量
       env: {
         "NODE_ENV": "test"
@@ -22,7 +22,7 @@ module.exports = {
       // 测试环境
       name: "pre",
       // 项目启动入口文件
-      script: "./app.js",
+      script: "../app.js",
       // 项目环境变量
       env: {
         "NODE_ENV": "pre"

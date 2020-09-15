@@ -21,7 +21,7 @@ const getInfoByBelongId = function (params = {}, success = () => { }, fail = () 
       currentPage,
       pageSize
     }
-  }).then((result) => {
+  }).then(async (result) => {
     params.list = [...list, ...result.data.data.list]
     const total = result.data.data.total
     if (currentPage * pageSize < total) {
@@ -36,7 +36,11 @@ const getInfoByBelongId = function (params = {}, success = () => { }, fail = () 
           return null
         }
       }).filter(item => !!item)
-      success(list)
+      try {
+        await success(list)
+      } catch (e) {
+        await fail(e)
+      }
     }
   }).catch((err) => {
     fail(err)
@@ -148,6 +152,21 @@ module.exports.updateRestoreBelongIds = function (ids) {
       method: 'POST',
       url: '/customergateway/filecenter/orderRecall/outer/ignore/updateRestoreBelongIds.do',
       data: ids
+    }).then((result) => {
+      resolve(result.data.data)
+    }).catch((err) => {
+      reject(err)
+    })
+  })
+}
+module.exports.findDomJsonByBelongId = function (belongId) {
+  return new Promise((resolve, reject) => {
+    axios({
+      method: 'POST',
+      url: '/customergateway/filecenter/orderRecall/outer/ignore/findDomJsonByBelongId.do?belongId=' + belongId,
+      data: {
+        belongId
+      }
     }).then((result) => {
       resolve(result.data.data)
     }).catch((err) => {

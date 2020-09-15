@@ -119,13 +119,23 @@ const makeFileDirectoryIfNeeded = function (filepath) {
   }
 };
 
-const getAreaIndex = function(list, number) {
-  return list.indexOf(number)
+const getAreaIndex = function (list, number, size) {
+  if(!list || !list.length) return { index: -1 }
+  const index = list.findIndex(({
+    start
+  }) => {
+    start = parseInt(start / size) * size
+    return start == number
+  })
+  return {
+    index,
+    item: index > -1 ? list[index] : null
+  }
 }
 
-const getNumberToList = function(number, value) {
+const getNumberToList = function (number, value) {
   let list = []
-  for(let i = 0; i < number; i ++) {
+  for (let i = 0; i < number; i++) {
     list.push(value || null)
   }
   return list

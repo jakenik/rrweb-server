@@ -21,7 +21,7 @@ module.exports = {
   threadNumber: 10, // 异步处理线程会影响最大同时处理视频数量
   videoStartTime: 200, // 视频开始时间戳
   autoDeleteVideo: true, // 是否自动删除本地视频源文件
-  regularTime: 20, // 定时任务时间单位/分
+  regularTime: 10, // 定时任务时间单位/分
   insertImgNumber: 20, // 插入图片的数量
   insertImgSrc: path.resolve(__dirname, '../static/insert.png') // 插入图片路径
 }

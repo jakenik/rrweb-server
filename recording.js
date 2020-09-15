@@ -2,8 +2,8 @@ const timecut = require('./timecut');
 const path = require('path')
 const config = require('./config')
 const fs = require('fs')
-const { getInfoByBelongId, findbelongIds, updateFailBelongIds, saveVideoUrl } = require('./request/interface')
-const { awaitFor } = require('./utils')
+const { getInfoByBelongId, findbelongIds, updateFailBelongIds, saveVideoUrl, findDomJsonByBelongId } = require('./request/interface')
+const { awaitFor, group } = require('./utils')
 const OssUpload = require('./ossUpload')
 let __rrwebPlayerFinish = false
 let __isRun = false // 当前进程是否正在运行
@@ -54,7 +54,7 @@ module.exports = async function () {
   })
 }
 // module.exports = async function () {
-//   recordhandle(7100041998839808)
+//   recordhandle(8462964239314944)
 // }
 /**
  *
@@ -67,11 +67,12 @@ const recordhandle = function (belongId) {
   return new Promise((resolve, reject) => {
     getInfoByBelongId({
       belongId
-    }, (list) => {
+    }, async (list) => {
       if (!(Array.isArray(list) && list.length > 0)) return
       const videoTime = (list[list.length - 1].timestamp - list[0].timestamp) / 1000
       config.duration = typeof videoTime === 'number' ? videoTime : 60 * 60 * 2 // 获取视频播放长度 如果计算出错给出最大时长
       if (config.outputFilePath && config.fileType) config.output = config.outputFilePath + '/' + belongId + config.fileType
+      const insertTimes = await getInsertTimes(belongId)
       // console.log(config.duration / 60)
       timecut({
         ...config,
@@ -87,8 +88,7 @@ const recordhandle = function (belongId) {
           await page.evaluateHandle((videoStartTime) => replayer.play(videoStartTime || 200), config.videoStartTime)
           return promiseLoop()
         },
-        insertTimes: [300, 500],
-        insertList: getInsertList(config)
+        insertTimes: insertTimes
       }).then(async (localFileSrc) => {
         await OssUpload({
           name: belongId + config.fileType, path: localFileSrc
@@ -159,10 +159,23 @@ const batchUpdateFailBelongIds = function (list) {
   updateFailBelongIds(rmList)
 }
 
-const getInsertList = function (config) {
-  let list = []
-  for (let i = 0; i <= config.insertImgNumber; i++) {
-    list.push(config.insertImgSrc)
-  }
-  return list
+const getInsertTimes = async function (id) { // 根据后台跳入跳出返回一个开始和结束的插入图片数组
+  const data = await findDomJsonByBelongId(id)
+  if (!data.firstDom || !data.jumpDom || !data.jumpDom.length) return []
+  const startTime = JSON.parse(data.firstDom).timestamp
+  return group(data.jumpDom.filter((item, i) => {
+    let fig = item.jumpOutFlag == 1 && i + 1 <= data.jumpDom.length
+    return fig
+      ? data.jumpDom[i + 1].jumpOutFlag == 0
+      : item.jumpOutFlag == 0 && data.jumpDom[i - 1] && data.jumpDom[i - 1].jumpOutFlag == 1
+  }).map((item) => {
+    if (!item.domJson) return null
+    let domJson = JSON.parse(item.domJson)
+    return domJson.timestamp
+  }), 2).map((val) => {
+    return {
+      start: val[0] - startTime,
+      end: val[1] - val[0]
+    }
+  })
 }

@@ -197,12 +197,16 @@ module.exports = function (config) {
           });
         }
         let addNumber = 0
+        let timeNumber = delayMs + frameNumToTime(2, framesToCapture)
         for (let i = 1; i <= framesToCapture; i++) {
           let time = delayMs + frameNumToTime(i, framesToCapture)
-          let index = getAreaIndex(config.insertTimes, time)
+          let {
+            index,
+            item
+          } = getAreaIndex(config.insertTimes, time, timeNumber)
           if (index > -1) {
             var s = i + addNumber
-            addNumber = ((index + 1) * config.insertImgNumber)
+            addNumber = ((index + 1) * (item.end / timeNumber))
             var d = i + addNumber
             for (let c = s; c <= d; c++) {
               capturer.copy(config, c, framesToCapture)

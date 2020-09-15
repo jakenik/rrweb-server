@@ -42,3 +42,13 @@ module.exports.awaitFor = async function (array, cb) { // 使用等待的循环
   })
 }
 
+module.exports.group = function (array, subGroupLength) {
+  if (!Array.isArray(array)) return []
+  let index = 0;
+  let newArray = [];
+  while (index < array.length) {
+    newArray.push(array.slice(index, index += subGroupLength));
+  }
+  return newArray;
+}
+
