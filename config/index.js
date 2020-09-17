@@ -9,7 +9,7 @@ module.exports = {
     width: 1920,
     height: 1020
   },
-  selector: '.replayer-wrapper',     // 爬取范围节点
+  selector: '.rr-player__frame',     // 爬取范围节点
   left: 0, // 截图左部范围
   top: 0, // 截图顶部范围
   right: 0, // 截图距右范围
